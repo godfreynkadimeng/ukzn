@@ -1,0 +1,159 @@
+---
+title: "Retail Customer Market Segmentation"
+author: "MG Nkadimeng"
+date: "12/08/2021"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Customer Segmentation is the subdivision of a market into discrete customer groups that share similar characteristics. it can be a powerful means to identify under served or emerging customer markets. Using the above data companies can then outperform the competition by developing uniquely appealing products and services, 
+
+Most common ways that businesses use to segment their customers base is through demographic studies, geographic, economic, behavioral and psychographic. in our case will be looking at at the customer income level and spending habits. 
+
+
+
+```{r }
+#importing required packages 
+library(dplyr)
+library(ggplot2)
+library(cluster)
+```
+
+## First look of at the customer data through exploratory analysis 
+
+You can also embed plots, for example:
+
+```{r pressure, echo=True}
+#Loading data from CSV file Mall 
+customer_data <- read.csv("Mall_Customers.csv")
+
+#Sneak peek at the head and tail of the data 
+head(customer_data)
+tail(customer_data)
+
+#Rename column name 
+customer_data <- rename(data, annual_income = Annual.Income..k..,
+       spending_score = Spending.Score..1.100.)
+
+#Structure and statistical summary of the data
+str(customer_data)
+summary(customer_data)
+
+```
+## Visualising the customer data 
+```{r }
+ggplot(customer_data, aes(x = Gender)) + 
+  geom_bar(stat = "count", width = 0.5,fill = "steelblue") + 
+  theme_minimal() + 
+  labs(title = "Barplot Gender Comparison", xlab = "Gender")
+  
+```
+
+## 
+```{r }
+ggplot(customer_data, aes(x = Age)) +
+  geom_bar(fill = "black") +
+  theme_minimal() +
+  labs(title = "Age Distribution of Customers")
+
+```
+
+```{r }
+ggplot(customer_data, aes(x = Age)) +
+  geom_vline(aes(xintercept = mean(Age)), color = "blue",
+             linetype = "dashed", size = 1.5) +
+  geom_histogram(binwidth = 5, aes(y = ..density..), 
+                 color = "black", fill = "white") +
+  geom_density(alpha = 0.4, fill = "orange") +
+  labs(title = "Histogram to Show Density of Age Class")
+
+```
+
+```{r }
+ggplot(customer_data, aes(x = Age, fill = Gender, colour = Gender)) +
+  geom_histogram(bins = 10, position = "identity", alpha = 0.5)
+
+```
+
+
+```{r }
+ggplot(customer_data, aes(x = annual_income)) +
+  geom_density(fill = "navyblue") + 
+  labs(title = "Density plot for annual income varible") 
+```
+
+```{r }
+ggplot(customer_data, aes(x = spending_score)) + 
+  geom_boxplot() +
+  labs(title = "Boxplot for the spending score")
+```
+
+Understanding the concept of K-mean theory and intuition behind k mean algorithm, grouping customer with similar features. into different categories. 
+
+Determine the number of clusters in a task, we will learn how to get the optimum 
+
+
+```{r }
+set.seed(125) 
+
+# Getting optimum number of clusters 
+
+stat_gap <- clusGap(customer_data[, 3:5], FUN = kmeans, nstart = 25,
+                    K.max = 10, B = 50)
+plot(stat_gap)
+```
+
+Creating the customer cluster with kmean model
+
+```{r }
+
+k6 <- kmeans(customer_data[,3:5], 6, iter.max = 100, nstart = 50,
+             algorithm = "Lloyd")
+k6
+```
+
+Visualising cluster values 
+```{r }
+clusplot(customer_data, k6$cluster, color = T, shade = T, labels = 0, lines = 0)
+```
+
+
+Principal component analysis 
+```{r }
+pcclust <- prcomp(customer_data[,3:5], scale. = FALSE)
+
+summary(pcclust)
+
+```
+
+Apply the PCA on the model 
+```{r }
+pcclust$rotation[,1:2]
+```
+
+
+Plotting plotting the kmean 
+```{r }
+set.seed(1)
+ggplot(customer_data, aes(x = annual_income , y = spending_score)) + 
+  geom_point(stat = "identity", aes(color = as.factor(k6$cluster))) +
+  scale_color_discrete(name = " ", 
+                       breaks=c("1", "2", "3", "4", "5","6"),
+                       labels=c("Cluster 1", "Cluster 2", "Cluster 3", 
+                                "Cluster 4", "Cluster 5","Cluster 6")) +
+  ggtitle("Segments of Mall Customers", 
+          subtitle = "Using K-means Clustering")
+
+```
+
+
+```{r }
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
